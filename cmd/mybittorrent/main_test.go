@@ -1,6 +1,7 @@
 package main
 
 import (
+	"reflect"
 	"testing"
 )
 
@@ -51,16 +52,24 @@ func TestDecodeBencode(t *testing.T) {
 			input:   "i12",
 			wantErr: true,
 		},
+		{
+			name:  "simple list",
+			input: "l5:helloi1ee",
+			expected: []interface{}{
+				"hello",
+				1,
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := decodeBencode(tt.input)
+			got, _, err := decodeBencode(tt.input)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("decodeBencode() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !tt.wantErr && got != tt.expected {
+			if !tt.wantErr && !reflect.DeepEqual(got, tt.expected) {
 				t.Errorf("decodeBencode() = %v, want %v", got, tt.expected)
 			}
 		})
