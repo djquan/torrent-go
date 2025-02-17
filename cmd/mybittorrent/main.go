@@ -66,7 +66,7 @@ func decodeBencode(bencodedString string) (interface{}, int, error) {
 		return value, i, err
 
 	case bencodedString[0] == 'l':
-		var list []interface{}
+		list := make([]interface{}, 0)
 		consumed := 1 // Start with 1 for the 'l'
 		remaining := bencodedString[1:]
 

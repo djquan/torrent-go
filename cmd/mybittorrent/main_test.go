@@ -60,6 +60,39 @@ func TestDecodeBencode(t *testing.T) {
 				1,
 			},
 		},
+		{
+			name:     "empty list",
+			input:    "le",
+			expected: []interface{}{},
+			wantErr:  false,
+		},
+		// {
+		// 	name:  "nested list",
+		// 	input: "ll5:helloi1eei2ee",
+		// 	expected: []interface{}{
+		// 		[]interface{}{
+		// 			"hello",
+		// 			1,
+		// 		},
+		// 		2,
+		// 	},
+		// 	wantErr: false,
+		// },
+		// {
+		// 	name:  "list with multiple types",
+		// 	input: "l5:helloi1ei2ee",
+		// 	expected: []interface{}{
+		// 		"hello",
+		// 		1,
+		// 		2,
+		// 	},
+		// 	wantErr: false,
+		// },
+		// {
+		// 	name:    "unterminated list",
+		// 	input:   "l5:helloi1e",
+		// 	wantErr: true,
+		// },
 	}
 
 	for _, tt := range tests {
