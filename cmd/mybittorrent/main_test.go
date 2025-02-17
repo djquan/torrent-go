@@ -66,33 +66,39 @@ func TestDecodeBencode(t *testing.T) {
 			expected: []interface{}{},
 			wantErr:  false,
 		},
-		// {
-		// 	name:  "nested list",
-		// 	input: "ll5:helloi1eei2ee",
-		// 	expected: []interface{}{
-		// 		[]interface{}{
-		// 			"hello",
-		// 			1,
-		// 		},
-		// 		2,
-		// 	},
-		// 	wantErr: false,
-		// },
-		// {
-		// 	name:  "list with multiple types",
-		// 	input: "l5:helloi1ei2ee",
-		// 	expected: []interface{}{
-		// 		"hello",
-		// 		1,
-		// 		2,
-		// 	},
-		// 	wantErr: false,
-		// },
-		// {
-		// 	name:    "unterminated list",
-		// 	input:   "l5:helloi1e",
-		// 	wantErr: true,
-		// },
+		{
+			name:  "nested list with integer and string",
+			input: "lli956e5:appleee",
+			expected: []interface{}{
+				[]interface{}{
+					956,
+					"apple",
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name:  "nested list",
+			input: "ll5:helloi1eei2ee",
+			expected: []interface{}{
+				[]interface{}{
+					"hello",
+					1,
+				},
+				2,
+			},
+			wantErr: false,
+		},
+		{
+			name:  "list with multiple types",
+			input: "l5:helloi1ei2ee",
+			expected: []interface{}{
+				"hello",
+				1,
+				2,
+			},
+			wantErr: false,
+		},
 	}
 
 	for _, tt := range tests {

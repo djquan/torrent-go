@@ -36,13 +36,18 @@ func decodeString(bencodedString string) (string, int, error) {
 }
 
 func decodeInteger(bencodedString string) (int, int, error) {
+	// Expect 'i' prefix
+	if len(bencodedString) == 0 || bencodedString[0] != 'i' {
+		return 0, 0, fmt.Errorf("invalid integer format: missing 'i' prefix")
+	}
+
 	lastIndex := strings.Index(bencodedString, "e")
 	if lastIndex == -1 {
 		return 0, 0, fmt.Errorf("invalid integer format: missing 'e'")
 	}
 
-	// Get the full number string without skipping the first character
-	numStr := bencodedString[:lastIndex]
+	// Get the number string between 'i' and 'e'
+	numStr := bencodedString[1:lastIndex]
 	num, err := strconv.Atoi(numStr)
 	if err != nil {
 		return 0, 0, fmt.Errorf("invalid integer: %v", err)
@@ -62,7 +67,7 @@ func decodeBencode(bencodedString string) (interface{}, int, error) {
 		return value, i, err
 
 	case bencodedString[0] == 'i':
-		value, i, err := decodeInteger(bencodedString[1:])
+		value, i, err := decodeInteger(bencodedString[0:])
 		return value, i, err
 
 	case bencodedString[0] == 'l':
