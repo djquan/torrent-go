@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"unicode"
 	// bencode "github.com/jackpal/bencode-go" // Available if you need it!
 )
@@ -16,6 +17,10 @@ var _ = json.Marshal
 // - 5:hello -> hello
 // - 10:hello12345 -> hello12345
 func decodeBencode(bencodedString string) (interface{}, error) {
+	if len(bencodedString) == 0 {
+		return "", fmt.Errorf("Empty string is not a valid bencode")
+	}
+
 	if unicode.IsDigit(rune(bencodedString[0])) {
 		var firstColonIndex int
 
@@ -34,8 +39,16 @@ func decodeBencode(bencodedString string) (interface{}, error) {
 		}
 
 		return bencodedString[firstColonIndex+1 : firstColonIndex+1+length], nil
+	} else if bencodedString[0] == 'i' {
+		// Handle integer case
+		lastIndex := strings.Index(bencodedString, "e")
+		if lastIndex == -1 {
+			return "", fmt.Errorf("Invalid integer format: missing 'e'")
+		}
+		numStr := bencodedString[1:lastIndex]
+		return numStr, nil
 	} else {
-		return "", fmt.Errorf("Only strings are supported at the moment")
+		return "", fmt.Errorf("Unsupported bencode type")
 	}
 }
 

@@ -30,8 +30,25 @@ func TestDecodeBencode(t *testing.T) {
 			wantErr:  false,
 		},
 		{
+			name:     "single number",
+			input:    "i1e",
+			expected: "1",
+			wantErr:  false,
+		},
+		{
+			name:     "single number",
+			input:    "i12e",
+			expected: "12",
+			wantErr:  false,
+		},
+		{
 			name:    "empty string",
 			input:   "",
+			wantErr: true,
+		},
+		{
+			name:    "missing e",
+			input:   "i12",
 			wantErr: true,
 		},
 	}
