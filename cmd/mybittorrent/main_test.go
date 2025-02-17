@@ -40,6 +40,11 @@ func TestRun(t *testing.T) {
 			args:    []string{"program", "invalid"},
 			wantErr: true,
 		},
+		{
+			name: "info of torrent file",
+			args: []string{"program", "info", "../../sample.torrent"},
+			want: "Tracker URL: http://bittorrent-test-tracker.codecrafters.io/announce\nLength: 92063",
+		},
 	}
 
 	for _, tt := range tests {

@@ -3,9 +3,9 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"os"
-
 	"github.com/codecrafters-io/bittorrent-starter-go/internal/bencode"
+	"github.com/codecrafters-io/bittorrent-starter-go/internal/torrent"
+	"os"
 )
 
 func run(args []string) (string, error) {
@@ -14,25 +14,42 @@ func run(args []string) (string, error) {
 	}
 
 	command := args[1]
-	if command != "decode" {
+
+	switch command {
+	case "decode":
+		if len(args) < 3 {
+			return "", fmt.Errorf("Missing bencoded value")
+		}
+		decoded, _, err := bencode.Decode(args[2])
+		if err != nil {
+			return "", err
+		}
+		jsonOutput, err := json.Marshal(decoded)
+		if err != nil {
+			return "", fmt.Errorf("Error converting to JSON: %v", err)
+		}
+
+		return string(jsonOutput), nil
+	case "info":
+		if len(args) < 3 {
+			return "", fmt.Errorf("Missing torrent file")
+		}
+
+		filenameArg := args[2]
+		content, err := os.ReadFile(filenameArg)
+		if err != nil {
+			return "", fmt.Errorf("Error reading file: %v", err)
+		}
+		info, err := torrent.Info(content)
+		if err != nil {
+			return "", fmt.Errorf("Error parsing torrent file: %v", err)
+		}
+
+		output := "Tracker URL: " + info.Announce + "\n" + "Length: " + fmt.Sprint(info.Length)
+		return output, nil
+	default:
 		return "", fmt.Errorf("Unknown command: %s", command)
 	}
-
-	if len(args) < 3 {
-		return "", fmt.Errorf("Missing bencoded value")
-	}
-
-	decoded, _, err := bencode.Decode(args[2])
-	if err != nil {
-		return "", err
-	}
-
-	jsonOutput, err := json.Marshal(decoded)
-	if err != nil {
-		return "", fmt.Errorf("Error converting to JSON: %v", err)
-	}
-
-	return string(jsonOutput), nil
 }
 
 func main() {
