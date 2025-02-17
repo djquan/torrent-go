@@ -40,7 +40,9 @@ func info(args []string) (string, error) {
 		return "", fmt.Errorf("Error parsing torrent file: %v", err)
 	}
 
-	output := "Tracker URL: " + info.Announce + "\n" + "Length: " + fmt.Sprint(info.Length)
+	output := "Tracker URL: " + info.Announce + "\n" +
+		"Length: " + fmt.Sprint(info.Length) + "\n" +
+		"Info Hash: " + fmt.Sprintf("%x", info.InfoHash)
 	return output, nil
 }
 

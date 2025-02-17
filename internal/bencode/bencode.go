@@ -3,6 +3,7 @@ package bencode
 import (
 	"bytes"
 	"fmt"
+	"sort"
 	"strconv"
 	"unicode"
 )
@@ -131,4 +132,79 @@ func Decode(bencodedString []byte) (interface{}, int, error) {
 	default:
 		return "", 0, fmt.Errorf("unsupported bencode type")
 	}
+}
+
+func Encode(value interface{}) ([]byte, error) {
+	switch value.(type) {
+	case []byte:
+		return encodeByteSlice(value.([]byte))
+	case int:
+		return encodeInteger(value.(int))
+	case []interface{}:
+		return encodeList(value.([]interface{}))
+	case map[string]interface{}:
+		return encodeDictionary(value.(map[string]interface{}))
+	}
+
+	return []byte{}, nil
+}
+
+func encodeDictionary(m map[string]interface{}) (result []byte, err error) {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	result = append(result, 'd')
+
+	for _, k := range keys {
+		keyEnc, err := Encode([]byte(k))
+		if err != nil {
+			return result, err
+		}
+		result = append(result, keyEnc...)
+		valueEnc, err := Encode(m[k])
+		if err != nil {
+			return result, err
+		}
+		result = append(result, valueEnc...)
+	}
+
+	result = append(result, 'e')
+
+	return result, err
+}
+
+func encodeList(i []interface{}) (result []byte, err error) {
+	result = append(result, 'l')
+
+	for _, item := range i {
+		r, err := Encode(item)
+		if err != nil {
+			return result, err
+		}
+		result = append(result, r...)
+	}
+
+	result = append(result, 'e')
+
+	return result, err
+}
+
+func encodeInteger(i int) (result []byte, err error) {
+	result = append(result, 'i')
+	result = append(result, strconv.Itoa(i)...)
+	result = append(result, 'e')
+
+	return result, err
+}
+
+func encodeByteSlice(i []byte) (result []byte, err error) {
+	length := len(i)
+	result = append(result, strconv.Itoa(length)...)
+	result = append(result, ':')
+	result = append(result, i...)
+
+	return result, err
 }

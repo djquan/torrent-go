@@ -122,3 +122,90 @@ func TestDecode(t *testing.T) {
 		})
 	}
 }
+
+func TestEncode(t *testing.T) {
+	type args struct {
+		value interface{}
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    []byte
+		wantErr bool
+	}{
+		{
+			name: "simple string",
+			args: args{
+				value: []byte("hello"),
+			},
+			want: []byte("5:hello"),
+		},
+		{
+			name: "longer string",
+			args: args{
+				value: []byte("helloworld"),
+			},
+			want: []byte("10:helloworld"),
+		},
+		{
+			name: "integer",
+			args: args{
+				value: 123,
+			},
+			want: []byte("i123e"),
+		},
+		{
+			name: "list",
+			args: args{
+				value: []interface{}{
+					[]byte("hello"),
+					123,
+				},
+			},
+			want: []byte("l5:helloi123ee"),
+		},
+		{
+			name: "dictionary",
+			args: args{
+				value: map[string]interface{}{
+					"foo":   []byte("bar"),
+					"hello": 123,
+				},
+			},
+			want: []byte("d3:foo3:bar5:helloi123ee"),
+		},
+		{
+			name: "nested dictionary",
+			args: args{
+				value: map[string]interface{}{
+					"foo": map[string]interface{}{
+						"bar": 123,
+					},
+				},
+			},
+			want: []byte("d3:food3:bari123eee"),
+		},
+		{
+			name: "sorts keys",
+			args: args{
+				value: map[string]interface{}{
+					"hello": 123,
+					"foo":   []byte("bar"),
+				},
+			},
+			want: []byte("d3:foo3:bar5:helloi123ee"),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := Encode(tt.args.value)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Encode() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Encode() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

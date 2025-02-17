@@ -1,6 +1,7 @@
 package torrent
 
 import (
+	"crypto/sha1"
 	"fmt"
 	"github.com/codecrafters-io/bittorrent-starter-go/internal/bencode"
 )
@@ -12,6 +13,7 @@ type TorrentMetadata struct {
 	PieceLength int      // The length of each piece in bytes.
 	Pieces      []string // The hash of each piece, typically in 20-byte SHA-1 hash strings.
 	Announce    string   // The URL of the tracker for the torrent.
+	InfoHash    [20]byte // hash of the info
 }
 
 // Info parses the given list of bytes and returns a TorrentMetadata object.
@@ -35,12 +37,19 @@ func Info(data []byte) (*TorrentMetadata, error) {
 		return nil, fmt.Errorf("expected info field to be a dictionary, but got %T", root["info"])
 	}
 
+	encodedInfo, err := bencode.Encode(info)
+	if err != nil {
+		return nil, fmt.Errorf("failed to encode info: %v", err)
+	}
+	hash := sha1.Sum(encodedInfo)
+
 	// For now, returning an example TorrentMetadata for demonstration.
 	return &TorrentMetadata{
-		Name:        info["name"].(string),
+		Name:        string(info["name"].([]byte)),
 		Length:      info["length"].(int),
 		PieceLength: 16384,
 		Pieces:      []string{"piece1_hash", "piece2_hash"},
-		Announce:    root["announce"].(string),
+		Announce:    string(root["announce"].([]byte)),
+		InfoHash:    hash,
 	}, nil
 }

@@ -1,6 +1,7 @@
 package torrent
 
 import (
+	"encoding/hex"
 	"os"
 	"testing"
 )
@@ -28,4 +29,7 @@ func TestInfo(t *testing.T) {
 		t.Errorf("expected Length to be 92063, but got %d", info.Length)
 	}
 
+	if hex.EncodeToString(info.InfoHash[:]) != "d69f91e6b2ae4c542468d1073a71d4ea13879a7f" {
+		t.Errorf("expected d69f91e6b2ae4c542468d1073a71d4ea13879a7f, got %v", hex.EncodeToString(info.InfoHash[:]))
+	}
 }
