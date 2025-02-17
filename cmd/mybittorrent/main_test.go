@@ -99,6 +99,14 @@ func TestDecodeBencode(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name:  "dictionary",
+			input: "d3:foo3:bar5:helloi52ee",
+			expected: map[string]interface{}{
+				"foo":   "bar",
+				"hello": 52,
+			},
+		},
 	}
 
 	for _, tt := range tests {
