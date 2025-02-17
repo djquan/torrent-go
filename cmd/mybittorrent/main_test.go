@@ -8,7 +8,7 @@ func TestDecodeBencode(t *testing.T) {
 	tests := []struct {
 		name     string
 		input    string
-		expected string
+		expected interface{}
 		wantErr  bool
 	}{
 		{
@@ -32,13 +32,13 @@ func TestDecodeBencode(t *testing.T) {
 		{
 			name:     "single number",
 			input:    "i1e",
-			expected: "1",
+			expected: 1,
 			wantErr:  false,
 		},
 		{
-			name:     "single number",
+			name:     "two digit number",
 			input:    "i12e",
-			expected: "12",
+			expected: 12,
 			wantErr:  false,
 		},
 		{

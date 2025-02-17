@@ -46,7 +46,12 @@ func decodeBencode(bencodedString string) (interface{}, error) {
 			return "", fmt.Errorf("Invalid integer format: missing 'e'")
 		}
 		numStr := bencodedString[1:lastIndex]
-		return numStr, nil
+		// Convert string to integer
+		num, err := strconv.Atoi(numStr)
+		if err != nil {
+			return "", fmt.Errorf("Invalid integer: %v", err)
+		}
+		return num, nil
 	} else {
 		return "", fmt.Errorf("Unsupported bencode type")
 	}
