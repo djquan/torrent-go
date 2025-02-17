@@ -20,7 +20,7 @@ func Info(data []byte) (*TorrentMetadata, error) {
 	// This is a placeholder example, and it's assumed that the `data` contains
 	// properly formatted torrent metadata information.
 
-	decoded, _, err := bencode.Decode(string(data))
+	decoded, _, err := bencode.Decode(data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse torrent file: %v", err)
 	}

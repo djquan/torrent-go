@@ -1,13 +1,13 @@
 package bencode
 
 import (
+	"bytes"
 	"fmt"
 	"strconv"
-	"strings"
 	"unicode"
 )
 
-func decodeString(bencodedString string) (string, int, error) {
+func decodeString(bencodedString []byte) ([]byte, int, error) {
 	var firstColonIndex int
 	for i := 0; i < len(bencodedString); i++ {
 		if bencodedString[i] == ':' {
@@ -17,32 +17,32 @@ func decodeString(bencodedString string) (string, int, error) {
 	}
 
 	lengthStr := bencodedString[:firstColonIndex]
-	length, err := strconv.Atoi(lengthStr)
+	length, err := strconv.Atoi(string(lengthStr))
 	if err != nil {
-		return "", 0, fmt.Errorf("invalid string length: %v", err)
+		return []byte{}, 0, fmt.Errorf("invalid string length: %v", err)
 	}
 
 	if firstColonIndex+1+length > len(bencodedString) {
-		return "", 0, fmt.Errorf("string length exceeds input length")
+		return []byte{}, 0, fmt.Errorf("string length exceeds input length")
 	}
 
 	return bencodedString[firstColonIndex+1 : firstColonIndex+1+length], firstColonIndex + 1 + length, nil
 }
 
-func decodeInteger(bencodedString string) (int, int, error) {
+func decodeInteger(bencodedString []byte) (int, int, error) {
 	// Expect 'i' prefix
 	if len(bencodedString) == 0 || bencodedString[0] != 'i' {
 		return 0, 0, fmt.Errorf("invalid integer format: missing 'i' prefix")
 	}
 
-	lastIndex := strings.Index(bencodedString, "e")
+	lastIndex := bytes.IndexByte(bencodedString, 'e')
 	if lastIndex == -1 {
 		return 0, 0, fmt.Errorf("invalid integer format: missing 'e'")
 	}
 
 	// Get the number string between 'i' and 'e'
 	numStr := bencodedString[1:lastIndex]
-	num, err := strconv.Atoi(numStr)
+	num, err := strconv.Atoi(string(numStr))
 	if err != nil {
 		return 0, 0, fmt.Errorf("invalid integer: %v", err)
 	}
@@ -50,7 +50,7 @@ func decodeInteger(bencodedString string) (int, int, error) {
 	return num, lastIndex + 1, nil
 }
 
-func decodeList(bencodedString string) ([]interface{}, int, error) {
+func decodeList(bencodedString []byte) ([]interface{}, int, error) {
 	if len(bencodedString) == 0 || bencodedString[0] != 'l' {
 		return nil, 0, fmt.Errorf("invalid list format: missing 'l' prefix")
 	}
@@ -76,7 +76,7 @@ func decodeList(bencodedString string) ([]interface{}, int, error) {
 	return list, consumed + 1, nil // +1 for the 'e'
 }
 
-func decodeDictionary(bencodedString string) (map[string]interface{}, int, error) {
+func decodeDictionary(bencodedString []byte) (map[string]interface{}, int, error) {
 	if len(bencodedString) == 0 || bencodedString[0] != 'd' {
 		return nil, 0, fmt.Errorf("invalid dictionary format: missing 'd' prefix")
 	}
@@ -99,14 +99,14 @@ func decodeDictionary(bencodedString string) (map[string]interface{}, int, error
 		consumed += i
 		remaining = remaining[i:]
 
-		dict[key] = value
+		dict[string(key)] = value
 	}
 
 	return dict, consumed + 1, nil
 }
 
 // Decode takes a bencoded string and decodes it into the go value.
-func Decode(bencodedString string) (interface{}, int, error) {
+func Decode(bencodedString []byte) (interface{}, int, error) {
 	if len(bencodedString) == 0 {
 		return "", 0, fmt.Errorf("empty string is not valid bencode")
 	}

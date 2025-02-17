@@ -48,16 +48,41 @@ func decode(args []string) (string, error) {
 	if len(args) < 3 {
 		return "", fmt.Errorf("Missing bencoded value")
 	}
-	decoded, _, err := bencode.Decode(args[2])
+	decoded, _, err := bencode.Decode([]byte(args[2]))
 	if err != nil {
 		return "", err
 	}
-	jsonOutput, err := json.Marshal(decoded)
+	jsonOutput, err := customMarshal(decoded)
 	if err != nil {
 		return "", fmt.Errorf("Error converting to JSON: %v", err)
 	}
 
 	return string(jsonOutput), nil
+}
+
+// convertBytesToStrings recursively converts all []byte to strings in the interface{}
+func convertBytesToStrings(v interface{}) interface{} {
+	switch v := v.(type) {
+	case []byte:
+		return string(v)
+	case []interface{}:
+		for i, val := range v {
+			v[i] = convertBytesToStrings(val)
+		}
+		return v
+	case map[string]interface{}:
+		for k, val := range v {
+			v[k] = convertBytesToStrings(val)
+		}
+		return v
+	default:
+		return v
+	}
+}
+
+func customMarshal(v interface{}) ([]byte, error) {
+	converted := convertBytesToStrings(v)
+	return json.Marshal(converted)
 }
 
 func main() {

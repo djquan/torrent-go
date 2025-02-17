@@ -43,7 +43,7 @@ func TestRun(t *testing.T) {
 		{
 			name: "info of torrent file",
 			args: []string{"program", "info", "../../sample.torrent"},
-			want: "Tracker URL: http://bittorrent-test-tracker.codecrafters.io/announce\nLength: 92063",
+			want: "Tracker URL: http://bittorrent-test-tracker.codecrafters.io/announce\nLength: 92063\nInfo Hash: d69f91e6b2ae4c542468d1073a71d4ea13879a7f",
 		},
 	}
 

@@ -15,19 +15,19 @@ func TestDecode(t *testing.T) {
 		{
 			name:     "basic string",
 			input:    "5:hello",
-			expected: "hello",
+			expected: []byte("hello"),
 			wantErr:  false,
 		},
 		{
 			name:     "longer string",
 			input:    "10:helloworld",
-			expected: "helloworld",
+			expected: []byte("helloworld"),
 			wantErr:  false,
 		},
 		{
 			name:     "single character",
 			input:    "1:a",
-			expected: "a",
+			expected: []byte("a"),
 			wantErr:  false,
 		},
 		{
@@ -56,7 +56,7 @@ func TestDecode(t *testing.T) {
 			name:  "simple list",
 			input: "l5:helloi1ee",
 			expected: []interface{}{
-				"hello",
+				[]byte("hello"),
 				1,
 			},
 		},
@@ -72,7 +72,7 @@ func TestDecode(t *testing.T) {
 			expected: []interface{}{
 				[]interface{}{
 					956,
-					"apple",
+					[]byte("apple"),
 				},
 			},
 			wantErr: false,
@@ -82,7 +82,7 @@ func TestDecode(t *testing.T) {
 			input: "ll5:helloi1eei2ee",
 			expected: []interface{}{
 				[]interface{}{
-					"hello",
+					[]byte("hello"),
 					1,
 				},
 				2,
@@ -93,7 +93,7 @@ func TestDecode(t *testing.T) {
 			name:  "list with multiple types",
 			input: "l5:helloi1ei2ee",
 			expected: []interface{}{
-				"hello",
+				[]byte("hello"),
 				1,
 				2,
 			},
@@ -103,7 +103,7 @@ func TestDecode(t *testing.T) {
 			name:  "dictionary",
 			input: "d3:foo3:bar5:helloi52ee",
 			expected: map[string]interface{}{
-				"foo":   "bar",
+				"foo":   []byte("bar"),
 				"hello": 52,
 			},
 		},
@@ -111,7 +111,7 @@ func TestDecode(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, _, err := Decode(tt.input)
+			got, _, err := Decode([]byte(tt.input))
 			if (err != nil) != tt.wantErr {
 				t.Errorf("decodeBencode() error = %v, wantErr %v", err, tt.wantErr)
 				return
