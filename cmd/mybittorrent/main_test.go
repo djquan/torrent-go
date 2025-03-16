@@ -54,6 +54,15 @@ func TestRun(t *testing.T) {
 				"f00d937a0213df1982bc8d097227ad9e909acc17",
 			}, "\n"),
 		},
+		{
+			name: "peers of torrent file",
+			args: []string{"program", "peers", "../../sample.torrent"},
+			want: strings.Join([]string{
+				"165.232.41.73:51556",
+				"165.232.38.164:51493",
+				"165.232.35.114:51476",
+			}, "\n"),
+		},
 	}
 
 	for _, tt := range tests {

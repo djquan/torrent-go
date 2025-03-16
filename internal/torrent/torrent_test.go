@@ -1,9 +1,14 @@
 package torrent
 
 import (
+	"bytes"
 	"encoding/hex"
+	"io"
+	"net/http"
 	"os"
 	"testing"
+
+	"github.com/codecrafters-io/bittorrent-starter-go/internal/bencode"
 )
 
 func TestInfo(t *testing.T) {
@@ -16,7 +21,6 @@ func TestInfo(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to parse torrent file: %v", err)
 	}
-	t.Logf("info: %+v", info)
 	if info.Name != "sample.txt" {
 		t.Errorf("expected Name to be 'sample.txt', but got '%s'", info.Name)
 	}
@@ -48,4 +52,57 @@ func TestInfo(t *testing.T) {
 	if info.PieceHashes[2] != "f00d937a0213df1982bc8d097227ad9e909acc17" {
 		t.Errorf("expected f00d937a0213df1982bc8d097227ad9e909acc17, got %s", info.PieceHashes[2])
 	}
+}
+
+type MockHTTPClient struct {
+	Requests *http.Request
+}
+
+func (m *MockHTTPClient) Do(req *http.Request) (*http.Response, error) {
+	m.Requests = req
+	responseData := map[string]any{
+		"interval": 0,
+		"peers":    []byte{165, 232, 41, 73, 201, 84},
+	}
+
+	encodedResponse, err := bencode.Encode(responseData)
+	if err != nil {
+		return nil, err
+	}
+
+	response := &http.Response{
+		StatusCode: 200,
+		Body:       io.NopCloser(bytes.NewBuffer(encodedResponse)),
+	}
+	return response, nil
+}
+
+func TestPeers(t *testing.T) {
+	content, err := os.ReadFile("../../sample.torrent")
+	if err != nil {
+		t.Fatalf("failed to read sample.torrent: %v", err)
+	}
+
+	info, err := Info(content)
+	if err != nil {
+		t.Fatalf("failed to parse torrent file: %v", err)
+	}
+
+	mockHTTPClient := &MockHTTPClient{}
+
+	peers, err := Peers(mockHTTPClient, info)
+	if err != nil {
+		t.Fatalf("failed to get peers: %v", err)
+	}
+
+	request := mockHTTPClient.Requests
+
+	if request == nil {
+		t.Errorf("expected request to be non-nil: did not call Do")
+	}
+
+	if request.URL.String() != "http://bittorrent-test-tracker.codecrafters.io/announce?compact=1&downloaded=0&info_hash=%D6%9F%91%E6%B2%AELT%24h%D1%07%3Aq%D4%EA%13%87%9A%7F&left=92063&peer_id=99999999999999999999&port=6881&uploaded=0" {
+		t.Errorf("expected announce URL to be 'http://bittorrent-test-tracker.codecrafters.io/announce', but got '%s'", request.URL.String())
+	}
+	t.Logf("peers: %v", peers)
 }

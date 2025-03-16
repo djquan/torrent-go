@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"strings"
 
@@ -22,9 +23,35 @@ func run(args []string) (string, error) {
 		return decode(args)
 	case "info":
 		return info(args)
+	case "peers":
+		return peers(args)
 	default:
 		return "", fmt.Errorf("Unknown command: %s", command)
 	}
+}
+
+func peers(args []string) (string, error) {
+	if len(args) < 3 {
+		return "", fmt.Errorf("Missing torrent file")
+	}
+
+	filenameArg := args[2]
+	content, err := os.ReadFile(filenameArg)
+	if err != nil {
+		return "", fmt.Errorf("Error reading file: %v", err)
+	}
+
+	info, err := torrent.Info(content)
+	if err != nil {
+		return "", fmt.Errorf("Error parsing torrent file: %v", err)
+	}
+
+	peers, err := torrent.Peers(http.DefaultClient, info)
+	if err != nil {
+		return "", fmt.Errorf("Error getting peers: %v", err)
+	}
+
+	return strings.Join(peers, "\n"), nil
 }
 
 func info(args []string) (string, error) {
