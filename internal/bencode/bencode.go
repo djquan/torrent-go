@@ -1,3 +1,5 @@
+// Package bencode implements encoding and decoding of Bencode format,
+// commonly used in BitTorrent files.
 package bencode
 
 import (
@@ -51,12 +53,12 @@ func decodeInteger(bencodedString []byte) (int, int, error) {
 	return num, lastIndex + 1, nil
 }
 
-func decodeList(bencodedString []byte) ([]interface{}, int, error) {
+func decodeList(bencodedString []byte) ([]any, int, error) {
 	if len(bencodedString) == 0 || bencodedString[0] != 'l' {
 		return nil, 0, fmt.Errorf("invalid list format: missing 'l' prefix")
 	}
 
-	list := make([]interface{}, 0)
+	list := make([]any, 0)
 	consumed := 1 // Start with 1 for the 'l'
 	remaining := bencodedString[1:]
 
@@ -77,12 +79,12 @@ func decodeList(bencodedString []byte) ([]interface{}, int, error) {
 	return list, consumed + 1, nil // +1 for the 'e'
 }
 
-func decodeDictionary(bencodedString []byte) (map[string]interface{}, int, error) {
+func decodeDictionary(bencodedString []byte) (map[string]any, int, error) {
 	if len(bencodedString) == 0 || bencodedString[0] != 'd' {
 		return nil, 0, fmt.Errorf("invalid dictionary format: missing 'd' prefix")
 	}
 
-	dict := make(map[string]interface{})
+	dict := make(map[string]any)
 	consumed := 1 // Start with 1 for the 'd'
 	remaining := bencodedString[1:]
 	for len(remaining) > 0 && remaining[0] != 'e' {
@@ -106,8 +108,9 @@ func decodeDictionary(bencodedString []byte) (map[string]interface{}, int, error
 	return dict, consumed + 1, nil
 }
 
-// Decode takes a bencoded string and decodes it into the go value.
-func Decode(bencodedString []byte) (interface{}, int, error) {
+// Decode takes a bencoded string and decodes it into a Go value.
+// It returns the decoded value, the number of bytes consumed, and any error encountered.
+func Decode(bencodedString []byte) (any, int, error) {
 	if len(bencodedString) == 0 {
 		return "", 0, fmt.Errorf("empty string is not valid bencode")
 	}
@@ -134,22 +137,22 @@ func Decode(bencodedString []byte) (interface{}, int, error) {
 	}
 }
 
-func Encode(value interface{}) ([]byte, error) {
+func Encode(value any) ([]byte, error) {
 	switch value.(type) {
 	case []byte:
 		return encodeByteSlice(value.([]byte))
 	case int:
 		return encodeInteger(value.(int))
-	case []interface{}:
-		return encodeList(value.([]interface{}))
-	case map[string]interface{}:
-		return encodeDictionary(value.(map[string]interface{}))
+	case []any:
+		return encodeList(value.([]any))
+	case map[string]any:
+		return encodeDictionary(value.(map[string]any))
 	}
 
 	return []byte{}, nil
 }
 
-func encodeDictionary(m map[string]interface{}) (result []byte, err error) {
+func encodeDictionary(m map[string]any) (result []byte, err error) {
 	keys := make([]string, 0, len(m))
 	for k := range m {
 		keys = append(keys, k)
@@ -176,7 +179,7 @@ func encodeDictionary(m map[string]interface{}) (result []byte, err error) {
 	return result, err
 }
 
-func encodeList(i []interface{}) (result []byte, err error) {
+func encodeList(i []any) (result []byte, err error) {
 	result = append(result, 'l')
 
 	for _, item := range i {

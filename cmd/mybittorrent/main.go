@@ -3,9 +3,11 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"os"
+	"strings"
+
 	"github.com/codecrafters-io/bittorrent-starter-go/internal/bencode"
 	"github.com/codecrafters-io/bittorrent-starter-go/internal/torrent"
-	"os"
 )
 
 func run(args []string) (string, error) {
@@ -42,7 +44,9 @@ func info(args []string) (string, error) {
 
 	output := "Tracker URL: " + info.Announce + "\n" +
 		"Length: " + fmt.Sprint(info.Length) + "\n" +
-		"Info Hash: " + fmt.Sprintf("%x", info.InfoHash)
+		"Info Hash: " + fmt.Sprintf("%x", info.InfoHash) + "\n" +
+		"Piece Length: " + fmt.Sprint(info.PieceLength) + "\n" +
+		"Piece Hashes:\n" + strings.Join(info.PieceHashes, "\n")
 	return output, nil
 }
 
