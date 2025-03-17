@@ -1,14 +1,12 @@
 package torrent
 
 import (
-	"bytes"
 	"encoding/hex"
-	"io"
-	"net/http"
 	"os"
 	"testing"
 
 	"github.com/codecrafters-io/bittorrent-starter-go/internal/bencode"
+	"github.com/codecrafters-io/bittorrent-starter-go/internal/testutil"
 )
 
 func TestInfo(t *testing.T) {
@@ -54,19 +52,6 @@ func TestInfo(t *testing.T) {
 	}
 }
 
-type MockHTTPClient struct {
-	Requests *http.Request
-	Response []byte
-}
-
-func (m *MockHTTPClient) Do(req *http.Request) (*http.Response, error) {
-	m.Requests = req
-	return &http.Response{
-		StatusCode: 200,
-		Body:       io.NopCloser(bytes.NewBuffer(m.Response)),
-	}, nil
-}
-
 func TestPeers(t *testing.T) {
 	content, err := os.ReadFile("../../sample.torrent")
 	if err != nil {
@@ -88,7 +73,7 @@ func TestPeers(t *testing.T) {
 		t.Fatalf("failed to encode response: %v", err)
 	}
 
-	mockHTTPClient := &MockHTTPClient{
+	mockHTTPClient := &testutil.MockHTTPClient{
 		Response: encodedResponse,
 	}
 
