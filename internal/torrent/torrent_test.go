@@ -56,25 +56,15 @@ func TestInfo(t *testing.T) {
 
 type MockHTTPClient struct {
 	Requests *http.Request
+	Response []byte
 }
 
 func (m *MockHTTPClient) Do(req *http.Request) (*http.Response, error) {
 	m.Requests = req
-	responseData := map[string]any{
-		"interval": 0,
-		"peers":    []byte{165, 232, 41, 73, 201, 84},
-	}
-
-	encodedResponse, err := bencode.Encode(responseData)
-	if err != nil {
-		return nil, err
-	}
-
-	response := &http.Response{
+	return &http.Response{
 		StatusCode: 200,
-		Body:       io.NopCloser(bytes.NewBuffer(encodedResponse)),
-	}
-	return response, nil
+		Body:       io.NopCloser(bytes.NewBuffer(m.Response)),
+	}, nil
 }
 
 func TestPeers(t *testing.T) {
@@ -88,7 +78,19 @@ func TestPeers(t *testing.T) {
 		t.Fatalf("failed to parse torrent file: %v", err)
 	}
 
-	mockHTTPClient := &MockHTTPClient{}
+	responseData := map[string]any{
+		"interval": 0,
+		"peers":    []byte{165, 232, 41, 73, 201, 84},
+	}
+
+	encodedResponse, err := bencode.Encode(responseData)
+	if err != nil {
+		t.Fatalf("failed to encode response: %v", err)
+	}
+
+	mockHTTPClient := &MockHTTPClient{
+		Response: encodedResponse,
+	}
 
 	peers, err := Peers(mockHTTPClient, info)
 	if err != nil {
