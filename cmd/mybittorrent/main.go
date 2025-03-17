@@ -30,20 +30,27 @@ func run(args []string) (string, error) {
 	}
 }
 
+func readTorrentFile(filename string) (*torrent.Metadata, error) {
+	content, err := os.ReadFile(filename)
+	if err != nil {
+		return nil, fmt.Errorf("Error reading file: %v", err)
+	}
+
+	info, err := torrent.Info(content)
+	if err != nil {
+		return nil, fmt.Errorf("Error parsing torrent file: %v", err)
+	}
+	return info, nil
+}
+
 func peers(args []string) (string, error) {
 	if len(args) < 3 {
 		return "", fmt.Errorf("Missing torrent file")
 	}
 
-	filenameArg := args[2]
-	content, err := os.ReadFile(filenameArg)
+	info, err := readTorrentFile(args[2])
 	if err != nil {
-		return "", fmt.Errorf("Error reading file: %v", err)
-	}
-
-	info, err := torrent.Info(content)
-	if err != nil {
-		return "", fmt.Errorf("Error parsing torrent file: %v", err)
+		return "", err
 	}
 
 	peers, err := torrent.Peers(http.DefaultClient, info)
@@ -59,14 +66,9 @@ func info(args []string) (string, error) {
 		return "", fmt.Errorf("Missing torrent file")
 	}
 
-	filenameArg := args[2]
-	content, err := os.ReadFile(filenameArg)
+	info, err := readTorrentFile(args[2])
 	if err != nil {
-		return "", fmt.Errorf("Error reading file: %v", err)
-	}
-	info, err := torrent.Info(content)
-	if err != nil {
-		return "", fmt.Errorf("Error parsing torrent file: %v", err)
+		return "", err
 	}
 
 	output := "Tracker URL: " + info.Announce + "\n" +

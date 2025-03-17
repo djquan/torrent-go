@@ -104,4 +104,8 @@ func TestPeers(t *testing.T) {
 	if request.URL.String() != "http://bittorrent-test-tracker.codecrafters.io/announce?compact=1&downloaded=0&info_hash=%D6%9F%91%E6%B2%AELT%24h%D1%07%3Aq%D4%EA%13%87%9A%7F&left=92063&peer_id=99999999999999999999&port=6881&uploaded=0" {
 		t.Errorf("expected announce URL to be 'http://bittorrent-test-tracker.codecrafters.io/announce', but got '%s'", request.URL.String())
 	}
+
+	if len(peers) != 1 || peers[0] != "165.232.41.73:51540" {
+		t.Errorf("expected peers to be ['165.232.41.73:51540'], but got %v", peers)
+	}
 }

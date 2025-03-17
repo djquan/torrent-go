@@ -24,6 +24,7 @@ type HTTPClient interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
+// Peers contacts the tracker and returns a list of peers in the format "IP:port".
 func Peers(httpClient HTTPClient, metadata *Metadata) ([]string, error) {
 	request, err := http.NewRequest("GET", metadata.Announce, nil)
 	if err != nil {
