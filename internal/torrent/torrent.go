@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 
 	"github.com/codecrafters-io/bittorrent-starter-go/internal/bencode"
 )
@@ -129,4 +130,18 @@ func Info(data []byte) (*Metadata, error) {
 		Announce:    string(root["announce"].([]byte)),
 		InfoHash:    hash,
 	}, nil
+}
+
+// ReadFromFile reads and parses a torrent file, returning its metadata.
+func ReadFromFile(filename string) (*Metadata, error) {
+	content, err := os.ReadFile(filename)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read file: %v", err)
+	}
+
+	info, err := Info(content)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse torrent file: %v", err)
+	}
+	return info, nil
 }

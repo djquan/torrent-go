@@ -30,25 +30,12 @@ func run(args []string) (string, error) {
 	}
 }
 
-func readTorrentFile(filename string) (*torrent.Metadata, error) {
-	content, err := os.ReadFile(filename)
-	if err != nil {
-		return nil, fmt.Errorf("Error reading file: %v", err)
-	}
-
-	info, err := torrent.Info(content)
-	if err != nil {
-		return nil, fmt.Errorf("Error parsing torrent file: %v", err)
-	}
-	return info, nil
-}
-
 func peers(args []string) (string, error) {
 	if len(args) < 3 {
 		return "", fmt.Errorf("Missing torrent file")
 	}
 
-	info, err := readTorrentFile(args[2])
+	info, err := torrent.ReadFromFile(args[2])
 	if err != nil {
 		return "", err
 	}
@@ -66,7 +53,7 @@ func info(args []string) (string, error) {
 		return "", fmt.Errorf("Missing torrent file")
 	}
 
-	info, err := readTorrentFile(args[2])
+	info, err := torrent.ReadFromFile(args[2])
 	if err != nil {
 		return "", err
 	}
