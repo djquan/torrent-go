@@ -21,6 +21,7 @@ type Metadata struct {
 	InfoHash    [20]byte // hash of the info
 }
 
+// HTTPClient represents an HTTP client capable of making requests to the tracker.
 type HTTPClient interface {
 	Do(req *http.Request) (*http.Response, error)
 }

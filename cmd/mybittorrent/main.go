@@ -83,16 +83,16 @@ func decode(args []string) (string, error) {
 }
 
 // convertBytesToStrings recursively converts all []byte to strings in the interface{}
-func convertBytesToStrings(v interface{}) interface{} {
+func convertBytesToStrings(v any) any {
 	switch v := v.(type) {
 	case []byte:
 		return string(v)
-	case []interface{}:
+	case []any:
 		for i, val := range v {
 			v[i] = convertBytesToStrings(val)
 		}
 		return v
-	case map[string]interface{}:
+	case map[string]any:
 		for k, val := range v {
 			v[k] = convertBytesToStrings(val)
 		}
@@ -102,7 +102,7 @@ func convertBytesToStrings(v interface{}) interface{} {
 	}
 }
 
-func customMarshal(v interface{}) ([]byte, error) {
+func customMarshal(v any) ([]byte, error) {
 	converted := convertBytesToStrings(v)
 	return json.Marshal(converted)
 }
