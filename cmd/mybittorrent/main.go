@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"strings"
@@ -25,9 +26,38 @@ func run(args []string) (string, error) {
 		return info(args)
 	case "peers":
 		return peers(args)
+	case "handshake":
+		return handshake(args)
 	default:
 		return "", fmt.Errorf("Unknown command: %s", command)
 	}
+}
+
+func handshake(args []string) (string, error) {
+	info, err := torrent.ReadFromFile(args[2])
+	if err != nil {
+		return "", err
+	}
+
+	// Split the peer address into host and port
+	peerAddr := args[3]
+	if !strings.Contains(peerAddr, ":") {
+		return "", fmt.Errorf("Invalid peer address format. Expected <ip>:<port>, got %s", peerAddr)
+	}
+
+	// Create TCP connection to peer
+	conn, err := net.Dial("tcp", peerAddr)
+	if err != nil {
+		return "", fmt.Errorf("Failed to connect to peer %s: %v", peerAddr, err)
+	}
+
+	// Perform handshake
+	peerID, err := torrent.Handshake(conn, info)
+	if err != nil {
+		return "", fmt.Errorf("Handshake failed: %v", err)
+	}
+
+	return "Peer ID: " + peerID, nil
 }
 
 func peers(args []string) (string, error) {
