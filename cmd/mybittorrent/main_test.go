@@ -63,6 +63,11 @@ func TestRun(t *testing.T) {
 				"165.232.35.114:51476",
 			}, "\n"),
 		},
+		{
+			name: "handshake",
+			args: []string{"program", "handshake", "../../sample.torrent", "165.232.41.73:51556"},
+			want: "Peer ID: 2d524e302e302e302df4c05830bc2a1deb2944e6",
+		},
 	}
 
 	for _, tt := range tests {
