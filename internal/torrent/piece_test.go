@@ -65,7 +65,7 @@ func TestDownloadPiece(t *testing.T) {
 	}
 
 	// Perform the peer message handling
-	err := DownloadPiece(mockConn, &outputBuffer, metadata, 1)
+	err := DownloadPiece(mockConn, &outputBuffer, metadata, 0)
 	if err != nil {
 		t.Fatalf("Peer message handling failed: %v", err)
 	}

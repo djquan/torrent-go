@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"os"
@@ -31,9 +33,108 @@ func run(args []string) (string, error) {
 		return handshake(args)
 	case "download_piece":
 		return downloadPiece(args)
+	case "download":
+		return download(args)
 	default:
 		return "", fmt.Errorf("Unknown command: %s", command)
 	}
+}
+
+// Create channels for coordinating downloads
+type pieceResult struct {
+	index int
+	err   error
+}
+
+func download(args []string) (string, error) {
+	if len(args) < 4 {
+		return "", fmt.Errorf("Usage: mybittorrent download -o <output-file> <torrent-file>")
+	}
+	outputFile := args[3]
+	torrentFile := args[4]
+	info, err := torrent.ReadFromFile(torrentFile)
+	if err != nil {
+		return "", err
+	}
+
+	peers, err := torrent.Peers(http.DefaultClient, info)
+	if err != nil {
+		return "", fmt.Errorf("Error getting peers: %v", err)
+	}
+
+	// Create a buffer for each piece
+	pieceBuffers := make([]*bytes.Buffer, len(info.PieceHashes))
+	for i := range pieceBuffers {
+		pieceBuffers[i] = &bytes.Buffer{}
+	}
+
+	resultChan := make(chan pieceResult, len(info.PieceHashes))
+	peerChan := make(chan string, len(peers))
+
+	// Fill peer channel with available peers
+	for _, peer := range peers {
+		peerChan <- peer
+	}
+
+	// Start parallel downloads
+	for i := range info.PieceHashes {
+		go func(pieceIndex int) {
+			// Get a peer from the channel
+			peerAddr := <-peerChan
+			// Return the peer to the channel when done
+			defer func() { peerChan <- peerAddr }()
+
+			fmt.Printf("Downloading piece %v from peer %v\n", pieceIndex, peerAddr)
+
+			// Create a new connection for this piece
+			conn, err := net.Dial("tcp", peerAddr)
+			if err != nil {
+				resultChan <- pieceResult{pieceIndex, fmt.Errorf("Failed to connect to peer %s: %v", peerAddr, err)}
+				return
+			}
+			defer conn.Close()
+
+			peerID, err := torrent.Handshake(conn, info)
+			if err != nil {
+				resultChan <- pieceResult{pieceIndex, fmt.Errorf("Handshake failed: %v", err)}
+				return
+			}
+
+			fmt.Printf("Peer Id: %v\n", peerID)
+
+			err = torrent.DownloadPiece(conn, pieceBuffers[pieceIndex], info, pieceIndex)
+			if err != nil {
+				resultChan <- pieceResult{pieceIndex, fmt.Errorf("Failed to download piece %d: %v", pieceIndex, err)}
+				return
+			}
+
+			resultChan <- pieceResult{pieceIndex, nil}
+		}(i)
+	}
+
+	// Collect results
+	for range info.PieceHashes {
+		result := <-resultChan
+		if result.err != nil {
+			return "", result.err
+		}
+	}
+
+	// Write all pieces to the output file in order
+	outputFileHandle, err := os.Create(outputFile)
+	if err != nil {
+		return "", fmt.Errorf("failed to create output file: %v", err)
+	}
+	defer outputFileHandle.Close()
+
+	for i, buffer := range pieceBuffers {
+		_, err := io.Copy(outputFileHandle, buffer)
+		if err != nil {
+			return "", fmt.Errorf("failed to write piece %d to file: %v", i, err)
+		}
+	}
+
+	return "download complete", nil
 }
 
 func downloadPiece(args []string) (string, error) {

@@ -1,6 +1,9 @@
 package main
 
 import (
+	"crypto/sha1"
+	"fmt"
+	"os"
 	"strings"
 	"testing"
 )
@@ -81,5 +84,26 @@ func TestRun(t *testing.T) {
 				t.Errorf("run() = %v, want %v", got, tt.want)
 			}
 		})
+	}
+}
+
+func TestDownload(t *testing.T) {
+	run([]string{"program", "download", "-o", "output.txt", "../../sample.torrent"})
+
+	content, err := os.ReadFile("output.txt")
+	defer os.Remove("output.txt")
+
+	if err != nil {
+		t.Errorf("failed to read output.txt: %v", err)
+	}
+
+	// Calculate SHA-1 hash of the content
+	hash := sha1.New()
+	hash.Write(content)
+	gotHash := fmt.Sprintf("%x", hash.Sum(nil))
+	wantHash := "1577533193d6eaf67fa97e1d5bc9d1dfbe4f82e3"
+
+	if gotHash != wantHash {
+		t.Errorf("output.txt SHA-1 hash = %v, want %v", gotHash, wantHash)
 	}
 }
