@@ -10,6 +10,7 @@ import (
 func TestHandshake(t *testing.T) {
 	// Create a mock TCP connection
 	mockConn := testutil.NewMockTCPConn()
+	defer mockConn.Close()
 
 	// Create test metadata
 	metadata := &Metadata{
@@ -65,10 +66,5 @@ func TestHandshake(t *testing.T) {
 		if writtenData[28+i] != metadata.InfoHash[i] {
 			t.Errorf("info hash mismatch at position %d: expected %x, got %x", i, metadata.InfoHash[i], writtenData[28+i])
 		}
-	}
-
-	// Verify the connection was closed
-	if !mockConn.CloseCalled {
-		t.Error("expected connection to be closed")
 	}
 }

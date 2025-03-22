@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/codecrafters-io/bittorrent-starter-go/internal/bencode"
@@ -28,9 +29,64 @@ func run(args []string) (string, error) {
 		return peers(args)
 	case "handshake":
 		return handshake(args)
+	case "download_piece":
+		return downloadPiece(args)
 	default:
 		return "", fmt.Errorf("Unknown command: %s", command)
 	}
+}
+
+func downloadPiece(args []string) (string, error) {
+	if len(args) < 5 {
+		return "", fmt.Errorf("Usage: mybittorrent download_piece -o <output-file> <torrent-file> <piece-index>")
+	}
+
+	outputFile := args[3]
+	torrentFile := args[4]
+	pieceIndex, err := strconv.Atoi(args[5])
+	if err != nil {
+		return "", fmt.Errorf("Invalid piece index: %v", err)
+	}
+
+	info, err := torrent.ReadFromFile(torrentFile)
+	if err != nil {
+		return "", err
+	}
+
+	peers, err := torrent.Peers(http.DefaultClient, info)
+	if err != nil {
+		return "", fmt.Errorf("Error getting peers: %v", err)
+	}
+
+	peerAddr := peers[0]
+
+	// Create TCP connection to peer
+	conn, err := net.Dial("tcp", peerAddr)
+	if err != nil {
+		return "", fmt.Errorf("Failed to connect to peer %s: %v", peerAddr, err)
+	}
+	defer conn.Close()
+
+	peerID, err := torrent.Handshake(conn, info)
+	if err != nil {
+		return "", fmt.Errorf("Handshake failed: %v", err)
+	}
+
+	fmt.Printf("Peer Id: %v\n", peerID)
+
+	outputFileHandle, err := os.Create(outputFile)
+	if err != nil {
+		return "", fmt.Errorf("failed to create output file: %v", err)
+	}
+	defer outputFileHandle.Close()
+
+	// Use the file writer for the piece data
+	err = torrent.DownloadPiece(conn, outputFileHandle, info, pieceIndex)
+	if err != nil {
+		return "", fmt.Errorf("Failed to download piece: %v", err)
+	}
+
+	return "Piece downloaded successfully", nil
 }
 
 func handshake(args []string) (string, error) {
@@ -50,6 +106,8 @@ func handshake(args []string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("Failed to connect to peer %s: %v", peerAddr, err)
 	}
+
+	defer conn.Close()
 
 	// Perform handshake
 	peerID, err := torrent.Handshake(conn, info)

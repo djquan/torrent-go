@@ -26,8 +26,6 @@ const (
 // It writes the handshake message and reads the peer's response.
 // Returns the peer ID in hexadecimal format and any error encountered.
 func Handshake(tcpConn TCPConn, metadata *Metadata) (string, error) {
-	defer tcpConn.Close()
-
 	// Create the handshake message
 	handshake := make([]byte, HandshakeLength)
 	handshake[0] = byte(len(ProtocolString))      // Protocol string length
