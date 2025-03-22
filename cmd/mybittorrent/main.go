@@ -84,8 +84,6 @@ func download(args []string) (string, error) {
 			// Return the peer to the channel when done
 			defer func() { peerChan <- peerAddr }()
 
-			fmt.Printf("Downloading piece %v from peer %v\n", pieceIndex, peerAddr)
-
 			// Create a new connection for this piece
 			conn, err := net.Dial("tcp", peerAddr)
 			if err != nil {
@@ -94,13 +92,11 @@ func download(args []string) (string, error) {
 			}
 			defer conn.Close()
 
-			peerID, err := torrent.Handshake(conn, info)
+			_, err = torrent.Handshake(conn, info)
 			if err != nil {
 				resultChan <- pieceResult{pieceIndex, fmt.Errorf("Handshake failed: %v", err)}
 				return
 			}
-
-			fmt.Printf("Peer Id: %v\n", peerID)
 
 			err = torrent.DownloadPiece(conn, pieceBuffers[pieceIndex], info, pieceIndex)
 			if err != nil {
@@ -168,12 +164,10 @@ func downloadPiece(args []string) (string, error) {
 	}
 	defer conn.Close()
 
-	peerID, err := torrent.Handshake(conn, info)
+	_, err = torrent.Handshake(conn, info)
 	if err != nil {
 		return "", fmt.Errorf("Handshake failed: %v", err)
 	}
-
-	fmt.Printf("Peer Id: %v\n", peerID)
 
 	outputFileHandle, err := os.Create(outputFile)
 	if err != nil {

@@ -151,7 +151,6 @@ func handleUnchokeMessage(conn io.ReadWriter, writer io.Writer, metadata *Metada
 	numBlocks := (actualPieceLength + blockSize - 1) / blockSize // Ceiling division
 
 	for blockIndex := uint32(0); blockIndex < numBlocks; blockIndex++ {
-		fmt.Printf("Handling block %v\n", blockIndex)
 		blockOffset := blockIndex * blockSize
 		remainingBytes := actualPieceLength - blockOffset
 		remainingBytes = uint32(min(int(remainingBytes), int(blockSize)))
